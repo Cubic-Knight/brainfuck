@@ -52,18 +52,55 @@
 >     read the operation's value
 [
   <->->+<       remove pointer; sub 1 from op's value; add else flag
-  [-[-[-[-[-[-[
-                >>> -[+>>-]+ >,<<< -[+<<-]+ <<                print/output
+  [-[-[-[-[-[-[-
+                >>> -[+>>-]+ >,<<< -[+<<-]+ <<               print/output
               ]
               > [ >> -[+>>-]+ >.<<< -[+<<-]+ < ] >+<<       read/input
             ]
-            > [
-              <         !! Need to implement bracket logic !!
-            ] >+<<
+            > [                     right bracket
+              >> -[+>>-]+        go to mem pointer
+              >[                 if cell != 0
+                <<< -[+<<-]+ <   go to prog pointer
+                ++++++           put the right bracket back
+                >[               while bracket_count != 0 (start at 1)
+                  <<+<-----      go to prev char; set else flag; test for left bracket
+                  [-[
+                      [->+<]<    not a bracket: ignore char
+                    ]
+                    > [>>+<<<] >+<<     right bracket: inc count
+                  ]
+                  > [>>-<<<] >++++[-<+>]    left bracket: dec count
+                  >>[-<<+>>]<<              move count
+                ]
+                <<->[-]>+       set left bracket flag; reset ghost char; set jump flag
+                > [>>]          jump to prog end (0) so the next part does not fail
+              ]<<< -[+<<-]+ <   go to prog pointer
+            ] >+<<[+>>-<<]      resolve left bracket flag
           ]
-          > [
-            <        !! Need to implement bracket logic !!
-          ] >+<<
+          > [                     left bracket
+            >> -[+>>-]+        go to mem pointer
+            >>>[->+<]<+<       make some room for the future; set else flag
+            [>-]               cell != 0: do nothing
+            > [                if cell == 0
+              <<<< -[+<<-]+    go to prog pointer
+              -<+++++<+        remove pointer; put left bracket back; set count to 1
+              [                while count != 0
+                >>+>-----      go to next char; set else flag; test for left bracket
+                [-[
+                    [-<+>]>    not a bracket: ignore char
+                  ]
+                  < [<<->>>] <+>>     right bracket: dec count
+                ]
+                < [<<+>>>] <++++[->+<]    left bracket: inc count
+                <<[->>+<<]>>              move count
+              ]
+              ->[-]>+          set right bracket flag; reset ghost char; set jump flag
+              >> -[+>>-]+      go to mem pointer
+              >>->             reset else flag
+            ]
+            >[-<+>]<<<         clean up space
+            <<< -[+<<-]+ <     go to prog pointer
+          ] >+<<[+>>+<<]       resolve right bracket flag
         ]
         > [ >> -[+>>-]+ ->>+<< -[+<<-]+ < ] >+<<      right
       ]
